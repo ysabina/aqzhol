@@ -116,51 +116,7 @@ while True:
                                       flags=cv2.CASCADE_SCALE_IMAGE)
 
     cam_matrix = np.array(K).reshape(3, 3).astype(np.float32)
-    for face in rects:
-        x1 = face.left()
-        y1 = face.top()
-        x2 = face.right()
-        y2 = face.bottom()
-        # Then we can also do cv2.rectangle function (frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-        landmarks = predictor(gray, face)
 
-        # We are then accesing the landmark points
-        i = [33, 8, 36, 45, 48,
-             54]  # Nose tip, Chin, Left eye corner, Right eye corner, Left mouth corner, right mouth corner
-        image_points = []
-        for n in i:
-            x = landmarks.part(n).x
-            y = landmarks.part(n).y;
-            # image_points = np.array([(x,y)], dtype="double")
-            image_points += [(x, y)]
-            cv2.circle(frame, (x, y), 2, (255, 255, 0), -1)
-
-        image_points = np.array(image_points, dtype="double")
-        # print(image_points)
-        print("Camera Matrix :\n {0}".format(cam_matrix))
-
-        dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
-        (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points,
-                                                                      cam_matrix, dist_coeffs,
-                                                                      flags=cv2.SOLVEPNP_ITERATIVE)
-
-        print("Rotation Vector:\n {0}".format(rotation_vector))
-        print("Translation Vector:\n {0}".format(translation_vector))
-
-        # Project a 3D point (0, 0, 1000.0) onto the image plane.
-        # We use this to draw a line sticking out of the nose
-
-        (nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector,
-                                                         translation_vector,
-                                                         cam_matrix, dist_coeffs)
-
-        for p in image_points:
-            cv2.circle(frame, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
-
-        p1 = (int(image_points[0][0]), int(image_points[0][1]))
-        p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
-
-        cv2.line(frame, p1, p2, (255, 0, 0), 2)
 #for rect in rects:
     for (x, y, w, h) in rects:
         rect = dlib.rectangle(int(x), int(y), int(x + w), int(y + h))
@@ -218,6 +174,51 @@ while True:
         cv2.putText(frame, "YAWN: {:.2f}".format(distance), (300, 60),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(frame, "Blinks: {}".format(TOTAL), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    for face in rects:
+        x1 = face.left()
+        y1 = face.top()
+        x2 = face.right()
+        y2 = face.bottom()
+        # Then we can also do cv2.rectangle function (frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
+        landmarks = predictor(gray, face)
+
+        # We are then accesing the landmark points
+        i = [33, 8, 36, 45, 48,
+             54]  # Nose tip, Chin, Left eye corner, Right eye corner, Left mouth corner, right mouth corner
+        image_points = []
+        for n in i:
+            x = landmarks.part(n).x
+            y = landmarks.part(n).y;
+            # image_points = np.array([(x,y)], dtype="double")
+            image_points += [(x, y)]
+            cv2.circle(frame, (x, y), 2, (255, 255, 0), -1)
+
+        image_points = np.array(image_points, dtype="double")
+        # print(image_points)
+        print("Camera Matrix :\n {0}".format(cam_matrix))
+
+        dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
+        (success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points,
+                                                                      cam_matrix, dist_coeffs,
+                                                                      flags=cv2.SOLVEPNP_ITERATIVE)
+
+        print("Rotation Vector:\n {0}".format(rotation_vector))
+        print("Translation Vector:\n {0}".format(translation_vector))
+
+        # Project a 3D point (0, 0, 1000.0) onto the image plane.
+        # We use this to draw a line sticking out of the nose
+
+        (nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector,
+                                                         translation_vector,
+                                                         cam_matrix, dist_coeffs)
+
+        for p in image_points:
+            cv2.circle(frame, (int(p[0]), int(p[1])), 3, (0, 0, 255), -1)
+
+        p1 = (int(image_points[0][0]), int(image_points[0][1]))
+        p2 = (int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
+
+        cv2.line(frame, p1, p2, (255, 0, 0), 2)
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
